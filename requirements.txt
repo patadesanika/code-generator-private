@@ -39,3 +39,6 @@ langchain_openai
 
 crewai[google-genai]
 mangum
+
+# Code obfuscation
+pyarmor

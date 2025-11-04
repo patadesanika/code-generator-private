@@ -1,2 +1,55 @@
-.env
-.venv
+# Ignore source files when using obfuscated Dockerfile
+*.py
+utils/
+!dist/
+
+# Git and development files
+.git
+.github
+.gitignore
+*.md
+.env*
+!.env.example
+
+# Build artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

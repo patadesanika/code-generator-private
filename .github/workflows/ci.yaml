@@ -57,28 +57,45 @@ jobs:
           ECR_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
 
-      - name: Build Docker image
+      - name: Build regular Docker image
         run: |
           docker build -t $ECR_REPOSITORY:latest -t $ECR_REPOSITORY:$IMAGE_TAG .
 
-      - name: Tag Docker images for ECR
+      - name: Tag and push regular Docker images to ECR
         run: |
           ECR_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}
           docker tag $ECR_REPOSITORY:latest $ECR_URI:latest
           docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
-
-      - name: Push Docker images to ECR
-        run: |
-          ECR_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}
           docker push $ECR_URI:latest
           docker push $ECR_URI:$IMAGE_TAG
+
+      - name: Install PyArmor and build obfuscated code
+        run: |
+          python -m pip install pyarmor
+          python pyarmor_config.py
+
+      - name: Build obfuscated Docker image
+        run: |
+          docker build -f Dockerfile.obfuscated -t $ECR_REPOSITORY_OBFUSCATED:latest -t $ECR_REPOSITORY_OBFUSCATED:$IMAGE_TAG .
+
+      - name: Tag and push obfuscated Docker images to ECR
+        run: |
+          ECR_URI_OBF=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_OBFUSCATED}
+          docker tag $ECR_REPOSITORY_OBFUSCATED:latest $ECR_URI_OBF:latest
+          docker tag $ECR_REPOSITORY_OBFUSCATED:$IMAGE_TAG $ECR_URI_OBF:$IMAGE_TAG
+          docker push $ECR_URI_OBF:latest
+          docker push $ECR_URI_OBF:$IMAGE_TAG
 
       - name: Remove local Docker images
         run: |
           docker rmi $ECR_REPOSITORY:latest || true
           docker rmi $ECR_REPOSITORY:$IMAGE_TAG || true
+          docker rmi $ECR_REPOSITORY_OBFUSCATED:latest || true
+          docker rmi $ECR_REPOSITORY_OBFUSCATED:$IMAGE_TAG || true
           docker rmi ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:latest || true
           docker rmi ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:$IMAGE_TAG || true
+          docker rmi ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_OBFUSCATED}:latest || true
+          docker rmi ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_OBFUSCATED}:$IMAGE_TAG || true
 
   trigger-cd:
     needs: build-and-push
