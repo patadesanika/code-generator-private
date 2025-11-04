@@ -1,0 +1,62 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-generator-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: code-generator-backend
+  template:
+    metadata:
+      labels:
+        app: code-generator-backend
+    spec:
+      containers:
+      - name: code-generator-backend
+
+        image: 042889969014.dkr.ecr.us-east-1.amazonaws.com/code-generator-backend:20251103070717
+
+
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            cpu: "100m"                # Minimum CPU guaranteed
+            memory: "1024Mi"            # Minimum memory guaranteed
+            ephemeral-storage: "200Mi" # Minimum disk space guaranteed
+          limits:
+            cpu: "500m"                # Max CPU allowed
+            memory: "2000Mi"            # Max memory allowed
+            # ephemeral-storage: "500Mi" # Max disk space allowed
+        envFrom:
+        - secretRef:
+            name: aws-config-secret
+        - secretRef:
+            name: gemini-config-secret
+        - secretRef:
+            name: tiktoken-config-secret
+        - secretRef:
+            name: keycloak-config-secret
+        - secretRef:
+            name: otel-config-secret
+        env:
+          - name: "HOST"
+            value: "code-generator-backend-service.default.svc"
+          - name: "PORT"
+            value: "8000"
+          - name: "SERVER_NAME"
+            value: "CODE_GENERATOR_BACKEND"
+          - name: "AGENT_NAME"
+            value: "CODE_GENERATOR"
+          - name: "AGENT_NAME"
+            value: "CODE_GENERATOR_AGENT"
+          - name: "AGENT_NAME_CONSTANT"
+            value: "CODE_GENERATOR_AGENT"
+          - name: "MODEL_NAME"
+            value: "gemini-2.5-flash-lite"
+          - name: "OTEL_RESOURCE_ATTRIBUTES"
+            value: "service.version=1.0.0,service.instance.id=llm-service-yash-unified-code-generator-backend"
+      serviceAccountName: mcp-poc
+---
